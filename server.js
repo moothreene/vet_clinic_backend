@@ -5,7 +5,7 @@ const cors = require("cors");
 
 const mongoose = require("mongoose");
 const User = require("./models/User");
-
+const Pet = require("./models/Pet")
 const jwt = require("jsonwebtoken");
 const secret = "hshsghjlGhiGIGiuVH"
 const cookieParser = require("cookie-parser");
@@ -54,18 +54,17 @@ app.post("/login", async(req,res)=>{
             })
         })
     }else{
-        res.status(400).json("wrong credentials!")
+        res.status(400).json("Wrong credentials!")
     }
 });
 
-app.get("/logout",async(req,res)=>{
+app.post("/logout",async(req,res)=>{
     res.cookie("token","").json("ok")
 });
 
 app.get("/users", async(req,res)=>{
     const {token} = req.cookies;
     jwt.verify(token,secret,async (error,data)=>{
-        console.log(data)
         if(error){
             console.log(error)
             throw(error)
