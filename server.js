@@ -78,7 +78,36 @@ app.get("/users", async(req,res)=>{
             res.json(users);
         }
     })
+});
+
+app.get("/admin",async(req,res)=>{
+    const {token} = req.cookies;
+    console.log("token - "+token)
+    if(!token) return res.json(false)
+    jwt.verify(token,secret,async (error,data)=>{
+        if(error){
+            console.log(error);
+        }
+        return res.json(data.isAdmin);
+    })
 })
+
+app.get("/users/:id", async(req,res)=>{
+    const {id} = req.params;
+    const {token} = req.cookies;
+    jwt.verify(token,secret,async (error,data)=>{
+        if(error){
+            console.log(error)
+            throw(error)
+        }
+        if(data.isAdmin || data.id===id){
+            const petDoc = await Pet.find({"owner_id":id});
+            res.json(petDoc);
+        }
+        else res.status(200).json("Wrong id request!")
+    })
+})
+    
 
 
 app.listen(PORT,()=>{
