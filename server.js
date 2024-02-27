@@ -145,6 +145,13 @@ app.post("/addpet",async(req,res)=>{
     })
 })
 
+app.get("/profile", (req,res)=>{
+    const {token} = req.cookies;
+    jwt.verify(token,secret,{},(error,data)=>{
+      if(error) return res.json(undefined)
+      res.json(data);
+    });
+});
 
 app.listen(PORT,()=>{
     console.log(`running on port ${PORT}`);
