@@ -116,6 +116,10 @@ app.get("/users/:id", async(req,res)=>{
         if(data.isAdmin || data.id===id){
             const petDoc = await Pet.find({"owner_id":id});
             res.json(petDoc);
+            const userDoc = await User.find({_id:id},{password:0,_id:0,isAdmin:0});
+            const petDoc = await Pet.find({owner_id:id});
+            const combinedData = {userData:userDoc[0], petData:petDoc}
+            res.json(combinedData);
         }
         else res.status(200).json("Wrong id request!")
     })
