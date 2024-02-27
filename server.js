@@ -125,6 +125,25 @@ app.get("/users/:id", async(req,res)=>{
     })
 })
     
+app.post("/addpet",async(req,res)=>{
+    const {token} = req.cookies;
+    jwt.verify(token,secret,async (error,data)=>{
+        if(error){
+            throw(error)
+        }
+        const {id,name,species,breed,sex,birthday,weight} = req.body
+        const petDoc = await Pet.create({
+            owner_id:id,
+            name,
+            species,
+            breed,
+            sex,
+            birthday,
+            weight
+        })
+        res.status(200).json("ok")
+    })
+})
 
 
 app.listen(PORT,()=>{
