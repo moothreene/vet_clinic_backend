@@ -7,7 +7,7 @@ const PetSchema = new mongoose.Schema({
     weight:{type:Number},
     birthday:{type:Date,required:true},
     species:{type:String, required:true, min:3},
-    color:{type:String},
+    breed:{type:String},
 })
 
 const PetModel = mongoose.model("Pet",PetSchema,"Pets");
