@@ -99,8 +99,9 @@ app.get("/admin",async(req,res)=>{
     jwt.verify(token,secret,async (error,data)=>{
         if(error){
             console.log(error);
+            throw(error)
         }
-        return res.json(data.isAdmin);
+        res.json(data.isAdmin);
     })
 })
 
