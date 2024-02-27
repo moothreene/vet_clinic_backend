@@ -80,8 +80,9 @@ app.get("/users", async(req,res)=>{
         if(error){
             console.log(error)
             throw(error)
+            res.status(200).json(error);
         }
-        if(data.isAdmin){
+        else if(data?.isAdmin){
             const users = await User.find({"isAdmin":false},{"password":0,"isAdmin":0})
             res.json(users);
         }else{
