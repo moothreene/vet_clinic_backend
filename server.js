@@ -51,10 +51,22 @@ app.post("/login", async(req,res)=>{
                 id:userDoc._id,
                 email,
                 isAdmin:userDoc.isAdmin
+    if(userDoc){
+        const passCorrect = bcrypt.compareSync(password,userDoc.password);
+        if(passCorrect){
+            jwt.sign({email, id:userDoc._id, isAdmin:userDoc.isAdmin},secret,{},(err,token)=>{
+                if(err) throw(err);
+                res.cookie("token",token,{secure:true,sameSite:"none"}).status(200).json({
+                    id:userDoc._id,
+                    email,
+                    isAdmin:userDoc.isAdmin
+                });
             })
-        })
+        }else{
+            res.status(400).json("Wrong password!")
+        }
     }else{
-        res.status(400).json("Wrong credentials!")
+        res.status(400).json("Wrong email!")
     }
 });
 
