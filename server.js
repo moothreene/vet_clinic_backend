@@ -43,14 +43,6 @@ app.post("/register", async(req,res)=>{
 app.post("/login", async(req,res)=>{
     const {email,password} = req.body;
     const userDoc = await User.findOne({email});
-    const passCorrect = bcrypt.compareSync(password,userDoc.password);
-    if(passCorrect){
-        jwt.sign({email, id:userDoc._id, isAdmin:userDoc.isAdmin},secret,{},(err,token)=>{
-            if(err) throw(err);
-            res.cookie("token",token,{secure:true,sameSite:"none"}).status(200).json({
-                id:userDoc._id,
-                email,
-                isAdmin:userDoc.isAdmin
     if(userDoc){
         const passCorrect = bcrypt.compareSync(password,userDoc.password);
         if(passCorrect){
@@ -78,8 +70,6 @@ app.get("/users", async(req,res)=>{
     const {token} = req.cookies;
     jwt.verify(token,secret,async (error,data)=>{
         if(error){
-            console.log(error)
-            throw(error)
             res.status(200).json(error);
         }
         else if(data?.isAdmin){
@@ -94,11 +84,9 @@ app.get("/users", async(req,res)=>{
 
 app.get("/admin",async(req,res)=>{
     const {token} = req.cookies;
-    console.log("token - "+token)
     if(!token) return res.json(false)
     jwt.verify(token,secret,async (error,data)=>{
         if(error){
-            console.log(error);
             throw(error)
         }
         res.json(data.isAdmin);
@@ -110,12 +98,9 @@ app.get("/users/:id", async(req,res)=>{
     const {token} = req.cookies;
     jwt.verify(token,secret,async (error,data)=>{
         if(error){
-            console.log(error)
             throw(error)
         }
         if(data.isAdmin || data.id===id){
-            const petDoc = await Pet.find({"owner_id":id});
-            res.json(petDoc);
             const userDoc = await User.find({_id:id},{password:0,_id:0,isAdmin:0});
             const petDoc = await Pet.find({owner_id:id});
             const combinedData = {userData:userDoc[0], petData:petDoc}
