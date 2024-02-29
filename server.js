@@ -71,7 +71,7 @@ app.get("/users", async(req,res)=>{
     const {token} = req.cookies;
     jwt.verify(token,secret,async (error,data)=>{
         if(error){
-            res.status(200).json(error);
+            res.status(400).json(error);
         }
         else if(data?.isAdmin){
             const users = await User.find({"isAdmin":false},{"password":0,"isAdmin":0})
@@ -97,6 +97,7 @@ app.get("/admin",async(req,res)=>{
 app.get("/users/:id", async(req,res)=>{
     const {id} = req.params;
     const {token} = req.cookies;
+    if(!token) return res.status(400).json("Unauthorized request")
     jwt.verify(token,secret,async (error,data)=>{
         if(error){
             throw(error)
@@ -107,13 +108,14 @@ app.get("/users/:id", async(req,res)=>{
             const combinedData = {userData:userDoc[0], petData:petDoc}
             res.json(combinedData);
         }
-        else res.status(200).json("Wrong id request!")
+        else res.status(400).json("Wrong id request!")
     })
 })
     
 app.post("/addpet",async(req,res)=>{
     const {token} = req.cookies;
-    jwt.verify(token,secret,async (error,data)=>{
+    if(!token) return res.status(400).json("Unauthorized request")
+    jwt.verify(token,secret, async(error,data)=>{
         if(error){
             throw(error)
         }
