@@ -6,6 +6,7 @@ const cors = require("cors");
 const mongoose = require("mongoose");
 const User = require("./models/User");
 const Pet = require("./models/Pet")
+const Manipulation = require("./models/Manipulation")
 const jwt = require("jsonwebtoken");
 const secret = "hshsghjlGhiGIGiuVH"
 const cookieParser = require("cookie-parser");
@@ -137,6 +138,47 @@ app.get("/profile", (req,res)=>{
       res.json(data);
     });
 });
+
+app.get("/pet/:id", async(req,res)=>{
+    const {id} = req.params;
+    const {token} = req.cookies;
+    if(!token) return res.status(400).json("Unauthorized request")
+    if(!id) return res.status(400).json("Wrond petId")
+    jwt.verify(token,secret,{},async(error,data)=>{
+        if(error) throw(error)
+        const petDoc = await Pet.findById(id);
+        const manipulationDoc = await Manipulation.find({"pet_id":id});
+        const combinedData = {petData:petDoc, manipulations:manipulationDoc}
+        if(data.isAdmin || JSON.stringify(data.id) === JSON.stringify(petDoc.owner_id)){
+            return res.json(combinedData)
+        }
+        })
+})
+
+app.post("/addManipulation", async(req,res)=>{
+    const {token} = req.cookies;
+    if(!token) return res.status(400).json("Unauthorized request")
+    jwt.verify(token,secret,{},async (error,data)=>{
+        if(error) return res.status(400).json("Unauthorized request")
+        if(data.isAdmin){
+            const {date,petId, weight, temp, purpose, desc, recommendation} = req.body
+            const manipulationDoc = await Manipulation.create({
+                pet_id:petId,
+                date,
+                weight,
+                temp,
+                purpose,
+                doctor:data.id,
+                desc,
+                recommendation,
+            })
+            res.status(200).json("ok");
+        }else{
+            res.status(400).json("Unauthorized request")
+        }
+        
+    });
+})
 
 app.listen(PORT,()=>{
     console.log(`running on port ${PORT}`);
