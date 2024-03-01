@@ -47,12 +47,12 @@ app.post("/login", async(req,res)=>{
     if(userDoc){
         const passCorrect = bcrypt.compareSync(password,userDoc.password);
         if(passCorrect){
-            jwt.sign({email, id:userDoc._id, isAdmin:userDoc.isAdmin},secret,{},(err,token)=>{
+            jwt.sign({email, id:userDoc._id, isDoctor:userDoc.isDoctor},secret,{},(err,token)=>{
                 if(err) throw(err);
                 res.cookie("token",token,{secure:true,sameSite:"none"}).status(200).json({
                     id:userDoc._id,
                     email,
-                    isAdmin:userDoc.isAdmin
+                    isDoctor:userDoc.isDoctor
                 });
             })
         }else{
@@ -73,11 +73,11 @@ app.get("/users", async(req,res)=>{
         if(error){
             res.status(400).json(error);
         }
-        else if(data?.isAdmin){
-            const users = await User.find({"isAdmin":false},{"password":0,"isAdmin":0})
+        else if(data?.isDoctor){
+            const users = await User.find({"isDoctor":false},{"password":0,"isDoctor":0})
             res.json(users);
         }else{
-            const users = await User.find({"_id":data.id},{"password":0,"isAdmin":0})
+            const users = await User.find({"_id":data.id},{"password":0,"isDoctor":0})
             res.json(users);
         }
     })
@@ -90,7 +90,7 @@ app.get("/admin",async(req,res)=>{
         if(error){
             throw(error)
         }
-        res.json(data.isAdmin);
+        res.json(data.isDoctor);
     })
 })
 
@@ -102,8 +102,8 @@ app.get("/users/:id", async(req,res)=>{
         if(error){
             throw(error)
         }
-        if(data.isAdmin || data.id===id){
-            const userDoc = await User.find({_id:id},{password:0,_id:0,isAdmin:0});
+        if(data.isDoctor || data.id===id){
+            const userDoc = await User.find({_id:id},{password:0,_id:0,isDoctor:0});
             const petDoc = await Pet.find({owner_id:id});
             const combinedData = {userData:userDoc[0], petData:petDoc}
             res.json(combinedData);
@@ -149,9 +149,9 @@ app.get("/pet/:id", async(req,res)=>{
     jwt.verify(token,secret,{},async(error,data)=>{
         if(error) throw(error)
         const petDoc = await Pet.findById(id);
-        const manipulationDoc = await Manipulation.find({"pet_id":id});
+        const manipulationDoc = await Manipulation.find({"pet_id":id},{desc:0,recommendation:0,weight:0,temp:0}).populate("doctor","email");
         const combinedData = {petData:petDoc, manipulations:manipulationDoc}
-        if(data.isAdmin || JSON.stringify(data.id) === JSON.stringify(petDoc.owner_id)){
+        if(data.isDoctor || JSON.stringify(data.id) === JSON.stringify(petDoc.owner_id)){
             return res.json(combinedData)
         }
         })
@@ -162,7 +162,7 @@ app.post("/addManipulation", async(req,res)=>{
     if(!token) return res.status(400).json("Unauthorized request")
     jwt.verify(token,secret,{},async (error,data)=>{
         if(error) return res.status(400).json("Unauthorized request")
-        if(data.isAdmin){
+        if(data.isDoctor){
             const {date,petId, weight, temp, purpose, desc, recommendation} = req.body
             const manipulationDoc = await Manipulation.create({
                 pet_id:petId,
