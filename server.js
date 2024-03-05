@@ -23,21 +23,33 @@ app.use(cookieParser());
 mongoose.connect("mongodb+srv://VetClinicApi:30zOgAm7THsNOmpX@vetclinicdata.gqlpko0.mongodb.net/ClinicData")
 
 app.post("/register", async(req,res)=>{
-    const {email, password} = req.body;
-    try{
-        const userDoc = await User.create(
-            {
-                email,
-                password:bcrypt.hashSync(password,salt)
-            }
-        )
-        res.status(200).json(userDoc);
-    }catch(error){
-        if(error.code === 11000){
-            res.status(400).json("User with given email already exists!")
-        }else
-        res.status(400).json(error);
+    const {token} = req.cookies;
+    if(!token) return res.json(false)
+    jwt.verify(token,secret,{},async(error,data)=>{
+    if(error) throw(error)
+    if(data.isDoctor){
+        const {email,firstName,lastName,phoneNumber,password} = req.body;
+        try{
+            const userDoc = await User.create(
+                {
+                    email,
+                    firstName,
+                    lastName,
+                    phoneNumber,
+                    password:bcrypt.hashSync(password,salt)
+                }
+            )
+            res.status(200).json(userDoc);
+        }catch(error){
+            if(error.code === 11000){
+                res.status(400).json("User with given email already exists!")
+            }else
+            res.status(400).json(error);
+        }
+    }else{
+        return res.status(400).json("Unauthorized request")
     }
+})
 })
 
 
@@ -69,6 +81,7 @@ app.post("/logout",async(req,res)=>{
 
 app.get("/users", async(req,res)=>{
     const {token} = req.cookies;
+    if(!token) return res.status(400).json("Unauthorized request")
     jwt.verify(token,secret,async (error,data)=>{
         if(error){
             res.status(400).json(error);
@@ -149,12 +162,28 @@ app.get("/pet/:id", async(req,res)=>{
     jwt.verify(token,secret,{},async(error,data)=>{
         if(error) throw(error)
         const petDoc = await Pet.findById(id);
-        const manipulationDoc = await Manipulation.find({"pet_id":id},{desc:0,recommendation:0,weight:0,temp:0}).populate("doctor","email");
+        const manipulationDoc = await Manipulation.find({"pet_id":id},{desc:0,recommendation:0,weight:0,temp:0}).populate("doctor","email firstName lastName");
         const combinedData = {petData:petDoc, manipulations:manipulationDoc}
         if(data.isDoctor || JSON.stringify(data.id) === JSON.stringify(petDoc.owner_id)){
             return res.json(combinedData)
         }
         })
+})
+
+app.get("/manipulation/:id",async(req,res)=>{
+    const {id} = req.params;
+    const {token} = req.cookies;
+    if(!token) return res.status(400).json("Unauthorized request");
+    if(!id) return res.status(400).json("Wrond petId");
+    jwt.verify(token,secret,{},async(error,data)=>{
+        if(error) throw(error);
+        const manipulationDoc = await Manipulation.findById(id).populate("doctor","firstName lastName");
+        const petDoc = await Pet.findById(manipulationDoc.pet_id);
+        if(data.isDoctor || JSON.stringify(data.id) === JSON.stringify(petDoc.owner_id)){
+            return res.json(manipulationDoc)
+        }
+
+    })
 })
 
 app.post("/addManipulation", async(req,res)=>{
@@ -180,6 +209,67 @@ app.post("/addManipulation", async(req,res)=>{
         }
         
     });
+})
+
+app.put("/editManipulation",async(req,res)=>{
+    const {token} = req.cookies;
+    if(!token) return res.status(400).json("Unauthorized request");
+    jwt.verify(token,secret,{},async(error,data)=>{
+        if(error) throw(error)
+        if(data.isDoctor){
+            const {manipulationId,date,petId, weight, temp, purpose, desc, recommendation} = req.body
+            const updateRes = await Manipulation.findByIdAndUpdate(manipulationId,{
+                pet_id:petId,
+                date,
+                weight,
+                temp,
+                purpose,
+                desc,
+                recommendation,
+            });
+            res.status(200).json(updateRes)
+        }
+    })
+})
+
+app.post("/deleteManipulation",async(req,res)=>{
+    const {token} = req.cookies;
+    if(!token) return res.status(400).json("Unauthorized request");
+    jwt.verify(token,secret,{},async(error,data)=>{
+        const {manipulationId} = req.body;
+        if(data.isDoctor){
+            const deleteRes = await Manipulation.findByIdAndDelete(manipulationId);
+            res.json(deleteRes);
+        }
+    })
+})
+
+app.put("/update/:id", async(req,res)=>{
+    const {id} = req.params;
+    const {token} = req.cookies;
+    if(!token) return res.json("Unauthorized request")
+    jwt.verify(token,secret,{},async(error,data)=>{
+    if(error) throw(error)
+    if(data.isDoctor){
+        const {email,firstName,lastName,phoneNumber} = req.body;
+        try{
+            const userDoc = await User.findOneAndUpdate(
+                {_id:id},
+                {
+                    email,
+                    firstName,
+                    lastName,
+                    phoneNumber
+                }
+            )
+            res.status(200).json(userDoc);
+        }catch(error){
+            res.status(400).json(error);
+        }
+    }else{
+        return res.status(400).json("Unauthorized request")
+    }
+})
 })
 
 app.listen(PORT,()=>{
