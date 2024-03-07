@@ -96,6 +96,24 @@ app.get("/users", async(req,res)=>{
     })
 });
 
+app.get("/pets", async(req,res)=>{
+    const {token} = req.cookies;
+    if(!token) return res.status(400).json("Unauthorized request")
+    jwt.verify(token,secret,async (error,data)=>{
+        if(error){
+            res.status(400).json(error);
+        }
+        else if(data?.isDoctor){
+            const users = await Pet.find().populate("owner_id","firstName lastName email")
+            res.json(users);
+        }else{
+            const users = await Pet.find({"owner_id":data.id})
+            res.json(users);
+        }
+    })
+});
+
+
 app.get("/admin",async(req,res)=>{
     const {token} = req.cookies;
     if(!token) return res.json(false)
@@ -161,8 +179,9 @@ app.get("/pet/:id", async(req,res)=>{
     if(!id) return res.status(400).json("Wrond petId")
     jwt.verify(token,secret,{},async(error,data)=>{
         if(error) throw(error)
-        const petDoc = await Pet.findById(id);
-        const manipulationDoc = await Manipulation.find({"pet_id":id},{desc:0,recommendation:0,weight:0,temp:0}).populate("doctor","email firstName lastName");
+        const petDoc = await Pet.findById(id).populate("owner_id", "email firstName lastName");
+        const manipulationDoc = await Manipulation.find({"pet_id":id},{desc:0,recommendation:0,weight:0,temp:0})
+        .populate("doctor","email firstName lastName")
         const combinedData = {petData:petDoc, manipulations:manipulationDoc}
         if(data.isDoctor || JSON.stringify(data.id) === JSON.stringify(petDoc.owner_id)){
             return res.json(combinedData)
@@ -193,6 +212,7 @@ app.post("/addManipulation", async(req,res)=>{
         if(error) return res.status(400).json("Unauthorized request")
         if(data.isDoctor){
             const {date,petId, weight, temp, purpose, desc, recommendation} = req.body
+            const updateRes = await Pet.findByIdAndUpdate(petId,{weight})
             const manipulationDoc = await Manipulation.create({
                 pet_id:petId,
                 date,
@@ -218,7 +238,7 @@ app.put("/editManipulation",async(req,res)=>{
         if(error) throw(error)
         if(data.isDoctor){
             const {manipulationId,date,petId, weight, temp, purpose, desc, recommendation} = req.body
-            const updateRes = await Manipulation.findByIdAndUpdate(manipulationId,{
+            const updateResMan = await Manipulation.findByIdAndUpdate(manipulationId,{
                 pet_id:petId,
                 date,
                 weight,
@@ -227,7 +247,8 @@ app.put("/editManipulation",async(req,res)=>{
                 desc,
                 recommendation,
             });
-            res.status(200).json(updateRes)
+            const updateResPet = await Pet.findByIdAndUpdate(petId,{weight})
+            res.status(200).json(updateResMan)
         }
     })
 })
