@@ -5,6 +5,9 @@ const UserSchema = new mongoose.Schema({
     firstName:{type:String, required:true, min:2},
     lastName:{type:String, required:true, min:2},
     phoneNumber:{type:String, required:true, min:7, unique:true},
+    city:{type:String, required:true},
+    street:{type:String, required:true},
+    addressMisc:{type:String},
     password:{type:String, required:true},
     isDoctor:{type:Boolean, default:false}
 })

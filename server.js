@@ -28,7 +28,7 @@ app.post("/register", async(req,res)=>{
     jwt.verify(token,secret,{},async(error,data)=>{
     if(error) throw(error)
     if(data.isDoctor){
-        const {email,firstName,lastName,phoneNumber,password} = req.body;
+        const {email,firstName,lastName,phoneNumber,city,street,misc,password} = req.body;
         try{
             const userDoc = await User.create(
                 {
@@ -36,13 +36,17 @@ app.post("/register", async(req,res)=>{
                     firstName,
                     lastName,
                     phoneNumber,
+                    city,
+                    street,
+                    addressMisc:misc,
                     password:bcrypt.hashSync(password,salt)
                 }
             )
             res.status(200).json(userDoc);
         }catch(error){
             if(error.code === 11000){
-                res.status(400).json("User with given email already exists!")
+                if(error.keyPattern?.phoneNumber) return res.status(400).json("User with given phone already exists!")
+                if(error.keyPattern?.email) return res.status(400).json("User with given email already exists!")
             }else
             res.status(400).json(error);
         }
@@ -272,7 +276,7 @@ app.put("/update/:id", async(req,res)=>{
     jwt.verify(token,secret,{},async(error,data)=>{
     if(error) throw(error)
     if(data.isDoctor){
-        const {email,firstName,lastName,phoneNumber} = req.body;
+        const {email,firstName,lastName,phoneNumber,city,street,misc} = req.body;
         try{
             const userDoc = await User.findOneAndUpdate(
                 {_id:id},
@@ -280,11 +284,18 @@ app.put("/update/:id", async(req,res)=>{
                     email,
                     firstName,
                     lastName,
-                    phoneNumber
+                    phoneNumber,
+                    city,
+                    street,
+                    addressMisc:misc
                 }
             )
             res.status(200).json(userDoc);
         }catch(error){
+            if(error.code === 11000){
+                if(error.keyPattern?.phoneNumber) return res.status(400).json("User with given phone already exists!")
+                if(error.keyPattern?.email) return res.status(400).json("User with given email already exists!")
+            }else
             res.status(400).json(error);
         }
     }else{
