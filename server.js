@@ -15,7 +15,7 @@ const bcrypt = require("bcryptjs");
 const salt = bcrypt.genSaltSync(10);
 
 
-app.use(cors({credentials:true,origin:"https://vetclinic-app-frontend-23790577e284.herokuapp.com/"}));
+app.use(cors({credentials:true,origin:"https://vetclinic-app-frontend-23790577e284.herokuapp.com"}));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
