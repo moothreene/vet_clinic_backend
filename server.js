@@ -187,7 +187,8 @@ app.get("/pet/:id", async(req,res)=>{
         const manipulationDoc = await Manipulation.find({"pet_id":id},{desc:0,recommendation:0,weight:0,temp:0})
         .populate("doctor","email firstName lastName")
         const combinedData = {petData:petDoc, manipulations:manipulationDoc}
-        if(data.isDoctor || JSON.stringify(data.id) === JSON.stringify(petDoc.owner_id)){
+        console.log(petDoc.owner_id)
+        if(data.isDoctor || JSON.stringify(data.id) === JSON.stringify(petDoc.owner_id._id)){
             return res.json(combinedData)
         }
         })
@@ -200,7 +201,9 @@ app.get("/manipulation/:id",async(req,res)=>{
     if(!id) return res.status(400).json("Wrond petId");
     jwt.verify(token,secret,{},async(error,data)=>{
         if(error) throw(error);
-        const manipulationDoc = await Manipulation.findById(id).populate("doctor","firstName lastName");
+        const manipulationDoc = await Manipulation.findById(id)
+        .populate("doctor","firstName lastName")
+        .populate("pet_id","name species birthday sex breed weight");
         const petDoc = await Pet.findById(manipulationDoc.pet_id);
         if(data.isDoctor || JSON.stringify(data.id) === JSON.stringify(petDoc.owner_id)){
             return res.json(manipulationDoc)
