@@ -15,7 +15,7 @@ const bcrypt = require("bcryptjs");
 const salt = bcrypt.genSaltSync(10);
 
 
-app.use(cors({credentials:true,origin:"https://vetclinic-app-frontend-23790577e284.herokuapp.com"}));
+app.use(cors({credentials:true,origin:/*"http://localhost:3000"*/"https://vetclinic-app-frontend-23790577e284.herokuapp.com"}));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
@@ -219,7 +219,9 @@ app.post("/addManipulation", async(req,res)=>{
         if(error) return res.status(400).json("Unauthorized request")
         if(data.isDoctor){
             const {date,petId, weight, temp, purpose, desc, recommendation} = req.body
-            const updateRes = await Pet.findByIdAndUpdate(petId,{weight})
+            if(weight > 0){
+                const updateRes = await Pet.findByIdAndUpdate(petId,{weight})
+            }
             const manipulationDoc = await Manipulation.create({
                 pet_id:petId,
                 date,
@@ -254,7 +256,9 @@ app.put("/editManipulation",async(req,res)=>{
                 desc,
                 recommendation,
             });
-            const updateResPet = await Pet.findByIdAndUpdate(petId,{weight})
+            if(weight > 0){
+                const updateRes = await Pet.findByIdAndUpdate(petId,{weight})
+            }
             res.status(200).json(updateResMan)
         }
     })
