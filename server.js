@@ -16,6 +16,7 @@ const salt = bcrypt.genSaltSync(10);
 
 
 app.use(cors({credentials:true,origin:/*"http://localhost:3000"*/"https://vetclinic-app-frontend-23790577e284.herokuapp.com"}));
+app.use(cors({credentials:true,origin:"http://localhost:3000"/*"https://vetclinic-app-frontend-23790577e284.herokuapp.com"*/}));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
@@ -187,7 +188,6 @@ app.get("/pet/:id", async(req,res)=>{
         const manipulationDoc = await Manipulation.find({"pet_id":id},{desc:0,recommendation:0,weight:0,temp:0})
         .populate("doctor","email firstName lastName")
         const combinedData = {petData:petDoc, manipulations:manipulationDoc}
-        console.log(petDoc.owner_id)
         if(data.isDoctor || JSON.stringify(data.id) === JSON.stringify(petDoc.owner_id._id)){
             return res.json(combinedData)
         }
