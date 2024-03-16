@@ -20,7 +20,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(cookieParser());
 
-mongoose.connect("mongodb+srv://VetClinicApi:30zOgAm7THsNOmpX@vetclinicdata.gqlpko0.mongodb.net/ClinicData")
+mongoose.connect(process.env.DATABASE_URL)
 
 app.post("/register", async(req,res)=>{
     const {token} = req.cookies;
