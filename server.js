@@ -183,7 +183,7 @@ app.get("/pet/:id", async(req,res)=>{
     if(!id) return res.status(400).json("Wrond petId")
     jwt.verify(token,secret,{},async(error,data)=>{
         if(error) throw(error)
-        const petDoc = await Pet.findById(id).populate("owner_id", "email firstName lastName phoneNumber");
+        const petDoc = await Pet.findById(id).populate("owner_id", "email firstName lastName phoneNumber city street addressMisc");
         const manipulationDoc = await Manipulation.find({"pet_id":id},{desc:0,recommendation:0,weight:0,temp:0})
         .populate("doctor","email firstName lastName")
         const combinedData = {petData:petDoc, manipulations:manipulationDoc}
