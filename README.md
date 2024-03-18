@@ -5,5 +5,7 @@ deployed here:
 
 
 **login credentials:**
+
   **EMAIL** - admin@gmail.com (Case sensitive)
+  
  **PASSWORD** - admin
