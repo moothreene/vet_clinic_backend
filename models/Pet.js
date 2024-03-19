@@ -4,7 +4,7 @@ const PetSchema = new mongoose.Schema({
     owner_id:{type:mongoose.Schema.Types.ObjectId, ref:"User",required:true},
     name:{type:String,required:true,min:2},
     sex:{type:String, required:true},
-    weight:{type:Number},
+    weight:{type:mongoose.Types.Decimal128},
     birthday:{type:Date,required:true},
     species:{type:String, required:true, min:3},
     breed:{type:String},
